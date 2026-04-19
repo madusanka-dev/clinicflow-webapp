@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/lib/api'
-import { useAuthStore } from '@/app/store'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
@@ -8,7 +7,6 @@ import type { Appointment, Investigation } from '@/types'
 import { FileText, Calendar, FlaskConical } from 'lucide-react'
 
 export default function PatientMedicalHistory() {
-  const { patient } = useAuthStore()
 
   const { data: appointments = [], isLoading } = useQuery({
     queryKey: ['patient-appointments'],

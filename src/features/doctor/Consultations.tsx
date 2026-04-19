@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
-import type { Appointment, Consultation } from '@/types'
+import { formatTime } from '@/lib/utils'
+import type { Appointment } from '@/types'
 import { ClipboardList, ChevronLeft, ChevronRight, RefreshCw, Printer } from 'lucide-react'
 import { useAuthStore } from '@/app/store'
 

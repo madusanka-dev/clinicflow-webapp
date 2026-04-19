@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { Slot } from '@/types'
-import { AlertCircle, CheckCircle, Loader2, CalendarIcon  } from 'lucide-react'
+import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 
 export default function BookAppointment() {
   const navigate     = useNavigate()

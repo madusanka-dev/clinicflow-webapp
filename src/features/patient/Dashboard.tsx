@@ -24,7 +24,6 @@ export default function PatientDashboard() {
     ['waiting', 'pre_booked'].includes(a.status)
   )
   const completed = appointments.filter(a => a.status === 'completed').length
-  const cancelled = appointments.filter(a => a.status === 'cancelled').length
 
   const next = upcoming[0]
 
