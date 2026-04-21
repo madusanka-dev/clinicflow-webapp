@@ -1,123 +1,150 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import api from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import { formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
-import type { Appointment, Patient, Slot } from '@/types'
-import { Plus, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { formatTime, getStatusColor, getStatusLabel } from "@/lib/utils";
+import type { Appointment, Patient, Slot } from "@/types";
+import { Plus, RefreshCw, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
 
 export default function ReceptionistAppointments() {
-  const queryClient = useQueryClient()
-  const [date, setDate]         = useState(new Date().toISOString().split('T')[0])
-  const [open, setOpen]         = useState(false)
-  const [selectedSlot, setSelectedSlot] = useState('')
-  const [selectedPatient, setSelectedPatient] = useState('')
-  const [appointmentType, setAppointmentType] = useState<'walk_in' | 'pre_booked'>('pre_booked')
-  const [notes, setNotes]       = useState('')
-  const [error, setError]       = useState('')
+  const queryClient = useQueryClient();
+
+  // date as Date object now
+  const [date, setDate] = useState<Date>(new Date())
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [dialogDatePickerOpen, setDialogDatePickerOpen] = useState(false)
+
+  const [open, setOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [selectedPatient, setSelectedPatient] = useState("");
+  const [appointmentType, setAppointmentType] = useState<"walk_in" | "pre_booked">("pre_booked");
+  const [notes, setNotes] = useState("");
+  const [error, setError] = useState("");
+
+  // yyyy-MM-dd string for API calls
+  const dateString = format(date, "yyyy-MM-dd");
 
   // Fetch appointments for selected date
-  const { data: appointments = [], isLoading, refetch } = useQuery({
-    queryKey: ['appointments', date],
+  const {
+    data: appointments = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["appointments", dateString],
     queryFn: async () => {
-      const res = await api.get(`/staff/appointments?date=${date}`)
-      return res.data as Appointment[]
+      const res = await api.get(`/staff/appointments?date=${dateString}`);
+      return res.data as Appointment[];
     },
-  })
+  });
 
   // Fetch patients for dropdown
   const { data: patients = [] } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ["patients"],
     queryFn: async () => {
-      const res = await api.get('/staff/patients')
-      return res.data as Patient[]
+      const res = await api.get("/staff/patients");
+      return res.data as Patient[];
     },
-  })
+  });
 
   // Fetch available slots
   const { data: slotsData } = useQuery({
-    queryKey: ['slots', date],
+    queryKey: ["slots", dateString],
     queryFn: async () => {
-      const res = await api.get(`/staff/slots/${date}`)
-      return res.data
+      const res = await api.get(`/staff/slots/${dateString}`);
+      return res.data;
     },
     enabled: open,
     staleTime: 0,
     refetchOnMount: true,
-  })
+  });
 
   // Update status mutation
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      await api.put(`/staff/appointments/${id}/status`, { status })
+      await api.put(`/staff/appointments/${id}/status`, { status });
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['appointments', date] }),
-  })
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["appointments", dateString] }),
+  });
 
   // Create appointment mutation
   const createAppointment = useMutation({
     mutationFn: async () => {
-      await api.post('/staff/appointments', {
-        patient_id:       parseInt(selectedPatient),
-        appointment_date: date,
-        slot_start:       selectedSlot,
-        type:             appointmentType,
+      await api.post("/staff/appointments", {
+        patient_id: parseInt(selectedPatient),
+        appointment_date: dateString,
+        slot_start: selectedSlot,
+        type: appointmentType,
         notes,
-      })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments', date] })
-      queryClient.invalidateQueries({ queryKey: ['slots', date] })
-      setOpen(false)
-      resetForm()
+      queryClient.invalidateQueries({ queryKey: ["appointments", dateString] });
+      queryClient.invalidateQueries({ queryKey: ["slots", dateString] });
+      setOpen(false);
+      resetForm();
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message ?? 'Failed to create appointment')
+      setError(err.response?.data?.message ?? "Failed to create appointment");
     },
-  })
+  });
 
   function resetForm() {
-    setSelectedSlot('')
-    setSelectedPatient('')
-    setAppointmentType('pre_booked')
-    setNotes('')
-    setError('')
+    setSelectedSlot("");
+    setSelectedPatient("");
+    setAppointmentType("pre_booked");
+    setNotes("");
+    setError("");
   }
 
   function changeDate(days: number) {
-    const d = new Date(date)
-    d.setDate(d.getDate() + days)
-    setDate(d.toISOString().split('T')[0])
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    setDate(d);
   }
 
-  const slots: Slot[] = slotsData?.slots ?? []
+  const slots: Slot[] = slotsData?.slots ?? [];
 
   const statusActions: Record<string, { label: string; next: string; color: string }> = {
-    waiting:         { label: 'Call In',   next: 'in_consultation', color: 'bg-blue-500 hover:bg-blue-600'   },
-    in_consultation: { label: 'Complete',  next: 'completed',       color: 'bg-green-500 hover:bg-green-600' },
-  }
+    waiting: {
+      label: "Call In",
+      next: "in_consultation",
+      color: "bg-blue-500 hover:bg-blue-600",
+    },
+    in_consultation: {
+      label: "Complete",
+      next: "completed",
+      color: "bg-green-500 hover:bg-green-600",
+    },
+  };
 
   return (
     <div className="space-y-6">
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -125,8 +152,8 @@ export default function ReceptionistAppointments() {
           <p className="text-slate-500 text-sm mt-1">Manage daily appointments</p>
         </div>
         <Button
-          onClick={() => { setOpen(true); resetForm() }}
-          className="bg-teal-600 hover:bg-teal-700"
+          onClick={() => { setOpen(true); resetForm(); }}
+          className="bg-teal-600 hover:bg-teal-700 py-4"
         >
           <Plus className="w-4 h-4 mr-2" />
           New Appointment
@@ -143,12 +170,30 @@ export default function ReceptionistAppointments() {
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="text-sm font-medium text-slate-800 border-0 outline-none bg-transparent"
-            />
+
+            {/* Date picker for nav bar */}
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-1.5 text-sm font-medium text-slate-800 hover:text-teal-600 transition-colors">
+                  <CalendarIcon className="w-4 h-4 text-slate-400" />
+                  {format(date, "PPP")}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(selected: Date | undefined) => {
+                    if (selected) {
+                      setDate(selected);
+                      setDatePickerOpen(false);
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
             <button
               onClick={() => changeDate(1)}
               className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500"
@@ -156,8 +201,8 @@ export default function ReceptionistAppointments() {
               <ChevronRight className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setDate(new Date().toISOString().split('T')[0])}
-              className="text-xs text-teal-600 hover:underline ml-2"
+              onClick={() => setDate(new Date())}
+              className="text-sm font-medium text-teal-600 hover:underline ml-2"
             >
               Today
             </button>
@@ -169,7 +214,7 @@ export default function ReceptionistAppointments() {
               <RefreshCw className="w-4 h-4" />
             </button>
             <span className="text-sm text-slate-500">
-              {appointments.length} appointment{appointments.length !== 1 ? 's' : ''}
+              {appointments.length} appointment{appointments.length !== 1 ? "s" : ""}
             </span>
           </div>
         </CardContent>
@@ -191,52 +236,42 @@ export default function ReceptionistAppointments() {
                   key={apt.id}
                   className="flex items-center gap-4 px-5 py-4 hover:bg-slate-50"
                 >
-                  {/* Token */}
                   <div className="w-16 text-center shrink-0">
                     <span className="text-sm font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-md">
                       {apt.token_number}
                     </span>
                   </div>
-
-                  {/* Patient info */}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate">
-                      {apt.patient?.name ?? 'Unknown'}
+                      {apt.patient?.name ?? "Unknown"}
                     </p>
                     <p className="text-xs text-slate-400 mt-0.5">
                       {formatTime(apt.slot_start)} — {formatTime(apt.slot_end)}
-                      {' · '}
-                      <span className="capitalize">{apt.type.replace('_', ' ')}</span>
+                      {" · "}
+                      <span className="capitalize">{apt.type.replace("_", " ")}</span>
                     </p>
                   </div>
-
-                  {/* Status badge */}
                   <Badge className={`text-xs shrink-0 ${getStatusColor(apt.status)}`}>
                     {getStatusLabel(apt.status)}
                   </Badge>
-
-                  {/* Action button */}
                   {statusActions[apt.status] && (
                     <Button
                       size="sm"
                       className={`text-xs text-white shrink-0 ${statusActions[apt.status].color}`}
-                      onClick={() => updateStatus.mutate({
-                        id: apt.id,
-                        status: statusActions[apt.status].next,
-                      })}
+                      onClick={() =>
+                        updateStatus.mutate({ id: apt.id, status: statusActions[apt.status].next })
+                      }
                       disabled={updateStatus.isPending}
                     >
                       {statusActions[apt.status].label}
                     </Button>
                   )}
-
-                  {/* Cancel button */}
-                  {['waiting', 'pre_booked'].includes(apt.status) && (
+                  {["waiting", "pre_booked"].includes(apt.status) && (
                     <Button
                       size="sm"
                       variant="ghost"
                       className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 shrink-0"
-                      onClick={() => updateStatus.mutate({ id: apt.id, status: 'cancelled' })}
+                      onClick={() => updateStatus.mutate({ id: apt.id, status: "cancelled" })}
                       disabled={updateStatus.isPending}
                     >
                       Cancel
@@ -251,13 +286,12 @@ export default function ReceptionistAppointments() {
 
       {/* New Appointment Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-150!">
           <DialogHeader>
             <DialogTitle>New Appointment</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-
+          <div className="space-y-4 pt-2 no-scrollbar overflow-y-auto">
             {error && (
               <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 {error}
@@ -281,14 +315,35 @@ export default function ReceptionistAppointments() {
               </Select>
             </div>
 
-            {/* Date */}
+            {/* Date — shadcn date picker */}
             <div className="space-y-2">
               <Label>Date</Label>
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              <Popover open={dialogDatePickerOpen} onOpenChange={setDialogDatePickerOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal text-sm border-slate-200 bg-white hover:bg-slate-50",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                    {format(date, "PPP")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(selected: Date | undefined) => {
+                      if (selected) {
+                        setDate(selected);
+                        setDialogDatePickerOpen(false);
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Type */}
@@ -325,10 +380,10 @@ export default function ReceptionistAppointments() {
                       className={`
                         text-xs py-2 px-1 rounded-lg border font-medium transition-colors
                         ${!slot.available
-                          ? 'bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed'
+                          ? "bg-slate-100 text-slate-300 border-slate-100 cursor-not-allowed"
                           : selectedSlot === slot.time
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white text-slate-700 border-slate-200 hover:border-teal-400'
+                            ? "bg-teal-600 text-white border-teal-600"
+                            : "bg-white text-slate-700 border-slate-200 hover:border-teal-400"
                         }
                       `}
                     >
@@ -358,20 +413,14 @@ export default function ReceptionistAppointments() {
               <Button
                 className="bg-teal-600 hover:bg-teal-700"
                 onClick={() => createAppointment.mutate()}
-                disabled={
-                  createAppointment.isPending ||
-                  !selectedPatient ||
-                  !selectedSlot
-                }
+                disabled={createAppointment.isPending || !selectedPatient || !selectedSlot}
               >
-                {createAppointment.isPending ? 'Booking...' : 'Book Appointment'}
+                {createAppointment.isPending ? "Booking..." : "Book Appointment"}
               </Button>
             </div>
-
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
-  )
+  );
 }

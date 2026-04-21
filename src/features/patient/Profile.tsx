@@ -1,90 +1,89 @@
-import { useState } from 'react'
-import { useMutation} from '@tanstack/react-query'
-import { useAuthStore } from '@/app/store'
-import api from '@/lib/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "@/app/store";
+import api from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { AlertCircle, CheckCircle, Loader2, User } from 'lucide-react'
+} from "@/components/ui/select";
+import { AlertCircle, CheckCircle, Loader2, User } from "lucide-react";
 
 export default function PatientProfile() {
-  const { patient, setPatientAuth, token } = useAuthStore()
+  const { patient, setPatientAuth, token } = useAuthStore();
 
   const [form, setForm] = useState({
-    name:                  patient?.name                ?? '',
-    phone:                 patient?.phone               ?? '',
-    age:                   String(patient?.age          ?? ''),
-    gender:                patient?.gender              ?? '',
-    password:              '',
-    password_confirmation: '',
-  })
+    name: patient?.name ?? "",
+    phone: patient?.phone ?? "",
+    age: String(patient?.age ?? ""),
+    gender: patient?.gender ?? "",
+    password: "",
+    password_confirmation: "",
+  });
 
-  const [error,   setError]   = useState('')
-  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const update = useMutation({
     mutationFn: async () => {
       const payload: Record<string, any> = {
-        name:   form.name,
-        phone:  form.phone,
-        age:    parseInt(form.age),
+        name: form.name,
+        phone: form.phone,
+        age: parseInt(form.age),
         gender: form.gender,
-      }
+      };
 
       // Only include password if filled
       if (form.password) {
-        payload.password              = form.password
-        payload.password_confirmation = form.password_confirmation
+        payload.password = form.password;
+        payload.password_confirmation = form.password_confirmation;
       }
 
-      const res = await api.put('/patient/profile', payload)
-      return res.data
+      const res = await api.put("/patient/profile", payload);
+      return res.data;
     },
     onSuccess: (data) => {
       // Update store with new patient data
       if (token) {
-        setPatientAuth(token, data.patient)
+        setPatientAuth(token, data.patient);
       }
-      setSuccess(true)
-      setForm((f) => ({ ...f, password: '', password_confirmation: '' }))
-      setTimeout(() => setSuccess(false), 3000)
-      setError('')
+      setSuccess(true);
+      setForm((f) => ({ ...f, password: "", password_confirmation: "" }));
+      setTimeout(() => setSuccess(false), 3000);
+      setError("");
     },
     onError: (err: any) => {
-      const errors = err.response?.data?.errors
+      const errors = err.response?.data?.errors;
       if (errors) {
-        const first = Object.values(errors)[0] as string[]
-        setError(first[0])
+        const first = Object.values(errors)[0] as string[];
+        setError(first[0]);
       } else {
-        setError(err.response?.data?.message ?? 'Update failed.')
+        setError(err.response?.data?.message ?? "Update failed.");
       }
     },
-  })
+  });
 
   function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError('')
-    setSuccess(false)
+    e.preventDefault();
+    setError("");
+    setSuccess(false);
 
     if (form.password && form.password !== form.password_confirmation) {
-      setError('Passwords do not match.')
-      return
+      setError("Passwords do not match.");
+      return;
     }
 
-    update.mutate()
+    update.mutate();
   }
 
   return (
     <div className="space-y-6 max-w-lg">
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">My Profile</h1>
@@ -105,7 +104,6 @@ export default function PatientProfile() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-
         {/* Success */}
         {success && (
           <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 border border-green-200 rounded-lg p-3">
@@ -128,7 +126,6 @@ export default function PatientProfile() {
             <CardTitle className="text-base">Personal Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-
             <div className="space-y-2">
               <Label>Full Name</Label>
               <Input
@@ -142,7 +139,7 @@ export default function PatientProfile() {
             <div className="space-y-2">
               <Label>Email</Label>
               <Input
-                value={patient?.email ?? ''}
+                value={patient?.email ?? ""}
                 disabled
                 className="bg-slate-50 text-slate-400"
               />
@@ -187,7 +184,6 @@ export default function PatientProfile() {
                 </SelectContent>
               </Select>
             </div>
-
           </CardContent>
         </Card>
 
@@ -214,7 +210,9 @@ export default function PatientProfile() {
               <Input
                 type="password"
                 value={form.password_confirmation}
-                onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, password_confirmation: e.target.value })
+                }
                 placeholder="••••••••"
               />
             </div>
@@ -226,11 +224,12 @@ export default function PatientProfile() {
           className="w-full bg-teal-600 hover:bg-teal-700"
           disabled={update.isPending}
         >
-          {update.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-          {update.isPending ? 'Saving...' : 'Save Changes'}
+          {update.isPending && (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          )}
+          {update.isPending ? "Saving..." : "Save Changes"}
         </Button>
-
       </form>
     </div>
-  )
+  );
 }

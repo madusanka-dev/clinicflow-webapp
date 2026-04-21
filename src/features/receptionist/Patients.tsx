@@ -1,80 +1,85 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Badge } from '@/components/ui/badge'
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Textarea } from '@/components/ui/textarea'
-import type { Patient } from '@/types'
-import { Plus, Search, User } from 'lucide-react'
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { Patient } from "@/types";
+import { Plus, Search, User } from "lucide-react";
 
-const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-']
+const bloodTypes = ["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"];
 
 interface PatientForm {
-  name: string
-  email: string
-  phone: string
-  age: string
-  gender: string
-  blood_type: string
-  allergies: string
+  name: string;
+  email: string;
+  phone: string;
+  age: string;
+  gender: string;
+  blood_type: string;
+  allergies: string;
 }
 
 const emptyForm: PatientForm = {
-  name: '', email: '', phone: '',
-  age: '', gender: '', blood_type: '', allergies: '',
-}
+  name: "",
+  email: "",
+  phone: "",
+  age: "",
+  gender: "",
+  blood_type: "",
+  allergies: "",
+};
 
 export default function ReceptionistPatients() {
-  const queryClient             = useQueryClient()
-  const [search, setSearch]     = useState('')
-  const [open, setOpen]         = useState(false)
-  const [selected, setSelected] = useState<Patient | null>(null)
-  const [form, setForm]         = useState<PatientForm>(emptyForm)
-  const [error, setError]       = useState('')
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<Patient | null>(null);
+  const [form, setForm] = useState<PatientForm>(emptyForm);
+  const [error, setError] = useState("");
 
   // Fetch patients
   const { data: patients = [], isLoading } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ["patients"],
     queryFn: async () => {
-      const res = await api.get('/staff/patients')
-      return res.data as Patient[]
+      const res = await api.get("/staff/patients");
+      return res.data as Patient[];
     },
-  })
+  });
 
   // Create patient
   const createPatient = useMutation({
     mutationFn: async () => {
-      await api.post('/staff/patients', {
+      await api.post("/staff/patients", {
         ...form,
         age: parseInt(form.age),
-      })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] })
-      setOpen(false)
-      setForm(emptyForm)
-      setError('')
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      setOpen(false);
+      setForm(emptyForm);
+      setError("");
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message ?? 'Failed to create patient')
+      setError(err.response?.data?.message ?? "Failed to create patient");
     },
-  })
+  });
 
   // Update patient
   const updatePatient = useMutation({
@@ -82,65 +87,65 @@ export default function ReceptionistPatients() {
       await api.put(`/staff/patients/${selected?.id}`, {
         ...form,
         age: parseInt(form.age),
-      })
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] })
-      setOpen(false)
-      setSelected(null)
-      setForm(emptyForm)
-      setError('')
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      setOpen(false);
+      setSelected(null);
+      setForm(emptyForm);
+      setError("");
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message ?? 'Failed to update patient')
+      setError(err.response?.data?.message ?? "Failed to update patient");
     },
-  })
+  });
 
   function openCreate() {
-    setSelected(null)
-    setForm(emptyForm)
-    setError('')
-    setOpen(true)
+    setSelected(null);
+    setForm(emptyForm);
+    setError("");
+    setOpen(true);
   }
 
   function openEdit(patient: Patient) {
-    setSelected(patient)
+    setSelected(patient);
     setForm({
-      name:       patient.name,
-      email:      patient.email,
-      phone:      patient.phone,
-      age:        String(patient.age),
-      gender:     patient.gender    ?? '',
-      blood_type: patient.blood_type ?? '',
-      allergies:  patient.allergies  ?? '',
-    })
-    setError('')
-    setOpen(true)
+      name: patient.name,
+      email: patient.email,
+      phone: patient.phone,
+      age: String(patient.age),
+      gender: patient.gender ?? "",
+      blood_type: patient.blood_type ?? "",
+      allergies: patient.allergies ?? "",
+    });
+    setError("");
+    setOpen(true);
   }
 
   function handleSubmit() {
     if (selected) {
-      updatePatient.mutate()
+      updatePatient.mutate();
     } else {
-      createPatient.mutate()
+      createPatient.mutate();
     }
   }
 
-  const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.phone.includes(search) ||
-    p.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = patients.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone.includes(search) ||
+      p.email.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const genderColor: Record<string, string> = {
-    male:   'bg-blue-50 text-blue-700',
-    female: 'bg-pink-50 text-pink-700',
-    other:  'bg-gray-50 text-gray-700',
-  }
+    male: "bg-blue-50 text-blue-700",
+    female: "bg-pink-50 text-pink-700",
+    other: "bg-gray-50 text-gray-700",
+  };
 
   return (
     <div className="space-y-6">
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -149,10 +154,7 @@ export default function ReceptionistPatients() {
             {patients.length} total patients
           </p>
         </div>
-        <Button
-          onClick={openCreate}
-          className="bg-teal-600 hover:bg-teal-700"
-        >
+        <Button onClick={openCreate} className="bg-teal-600 hover:bg-teal-700">
           <Plus className="w-4 h-4 mr-2" />
           New Patient
         </Button>
@@ -176,7 +178,7 @@ export default function ReceptionistPatients() {
             <div className="text-center py-12 text-slate-400">Loading...</div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-slate-400">
-              {search ? 'No patients found' : 'No patients yet'}
+              {search ? "No patients found" : "No patients yet"}
             </div>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -207,7 +209,9 @@ export default function ReceptionistPatients() {
 
                   {/* Gender */}
                   {patient.gender && (
-                    <Badge className={`text-xs shrink-0 ${genderColor[patient.gender] ?? 'bg-gray-50 text-gray-700'}`}>
+                    <Badge
+                      className={`text-xs shrink-0 ${genderColor[patient.gender] ?? "bg-gray-50 text-gray-700"}`}
+                    >
                       {patient.gender}
                     </Badge>
                   )}
@@ -237,15 +241,14 @@ export default function ReceptionistPatients() {
 
       {/* Create / Edit Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-150!">
           <DialogHeader>
             <DialogTitle>
-              {selected ? 'Edit Patient' : 'New Patient'}
+              {selected ? "Edit Patient" : "New Patient"}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-
+          <div className="space-y-4 pt-2 no-scrollbar overflow-y-auto">
             {error && (
               <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 {error}
@@ -320,7 +323,9 @@ export default function ReceptionistPatients() {
                   </SelectTrigger>
                   <SelectContent>
                     {bloodTypes.map((bt) => (
-                      <SelectItem key={bt} value={bt}>{bt}</SelectItem>
+                      <SelectItem key={bt} value={bt}>
+                        {bt}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -330,7 +335,9 @@ export default function ReceptionistPatients() {
                 <Label>Allergies</Label>
                 <Textarea
                   value={form.allergies}
-                  onChange={(e) => setForm({ ...form, allergies: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, allergies: e.target.value })
+                  }
                   rows={2}
                   placeholder="Any known allergies..."
                 />
@@ -354,16 +361,15 @@ export default function ReceptionistPatients() {
                 }
               >
                 {createPatient.isPending || updatePatient.isPending
-                  ? 'Saving...'
-                  : selected ? 'Update Patient' : 'Create Patient'
-                }
+                  ? "Saving..."
+                  : selected
+                    ? "Update Patient"
+                    : "Create Patient"}
               </Button>
             </div>
-
           </div>
         </DialogContent>
       </Dialog>
-
     </div>
-  )
+  );
 }

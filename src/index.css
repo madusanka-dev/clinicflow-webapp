@@ -103,10 +103,10 @@
     --text-h: #f3f4f6;
     --bg: #16171d;
     --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
+    --code-bg: #23281f;
+    --accent: #cbfbf1;
     --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
+    --accent-border: #00bba7;
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
@@ -242,3 +242,17 @@ code {
     @apply bg-background text-foreground;}
   html {
     @apply font-sans;}}
+
+
+::-webkit-scrollbar-thumb {
+  background: #0d9488; 
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #0f766e; 
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0d9488 transparent;
+}

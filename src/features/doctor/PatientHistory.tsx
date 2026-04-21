@@ -1,67 +1,84 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
-import type { Patient, Appointment, Consultation, Investigation } from '@/types'
-import { Search, User, ChevronRight, Calendar, FileText, Printer } from 'lucide-react'
+} from "@/components/ui/dialog";
+import {
+  formatDate,
+  formatTime,
+  getStatusColor,
+  getStatusLabel,
+} from "@/lib/utils";
+import type {
+  Patient,
+  Appointment,
+  Consultation,
+  Investigation,
+} from "@/types";
+import {
+  Search,
+  User,
+  ChevronRight,
+  Calendar,
+  FileText,
+  Printer,
+} from "lucide-react";
 
 interface PatientWithHistory extends Patient {
-  appointments: (Appointment & { consultation?: Consultation })[]
+  appointments: (Appointment & { consultation?: Consultation })[];
 }
 
 export default function DoctorPatientHistory() {
-  const [search, setSearch]     = useState('')
-  const [selected, setSelected] = useState<PatientWithHistory | null>(null)
-  const [open, setOpen]         = useState(false)
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<PatientWithHistory | null>(null);
+  const [open, setOpen] = useState(false);
 
   // Fetch all patients
   const { data: patients = [], isLoading } = useQuery({
-    queryKey: ['patients'],
+    queryKey: ["patients"],
     queryFn: async () => {
-      const res = await api.get('/staff/patients')
-      return res.data as Patient[]
+      const res = await api.get("/staff/patients");
+      return res.data as Patient[];
     },
-  })
+  });
 
   // Fetch selected patient history
   const { data: history, isLoading: historyLoading } = useQuery({
-    queryKey: ['patient-history', selected?.id],
+    queryKey: ["patient-history", selected?.id],
     queryFn: async () => {
-      const res = await api.get(`/staff/patients/${selected?.id}/history`)
-      return res.data as PatientWithHistory
+      const res = await api.get(`/staff/patients/${selected?.id}/history`);
+      return res.data as PatientWithHistory;
     },
     enabled: !!selected,
-  })
+  });
 
   function openHistory(patient: Patient) {
-    setSelected(patient as PatientWithHistory)
-    setOpen(true)
+    setSelected(patient as PatientWithHistory);
+    setOpen(true);
   }
 
-  const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.phone.includes(search) ||
-    p.email.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = patients.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.phone.includes(search) ||
+      p.email.toLowerCase().includes(search.toLowerCase()),
+  );
 
   const genderColor: Record<string, string> = {
-    male:   'bg-blue-50 text-blue-700',
-    female: 'bg-pink-50 text-pink-700',
-    other:  'bg-gray-50 text-gray-700',
-  }
+    male: "bg-blue-50 text-blue-700",
+    female: "bg-pink-50 text-pink-700",
+    other: "bg-gray-50 text-gray-700",
+  };
 
   return (
     <div className="space-y-6">
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">Patient History</h1>
@@ -115,7 +132,9 @@ export default function DoctorPatientHistory() {
 
                   {/* Gender */}
                   {patient.gender && (
-                    <Badge className={`text-xs shrink-0 ${genderColor[patient.gender]}`}>
+                    <Badge
+                      className={`text-xs shrink-0 ${genderColor[patient.gender]}`}
+                    >
                       {patient.gender}
                     </Badge>
                   )}
@@ -137,7 +156,7 @@ export default function DoctorPatientHistory() {
 
       {/* Patient History Dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-200">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <User className="w-5 h-5 text-teal-600" />
@@ -146,34 +165,43 @@ export default function DoctorPatientHistory() {
           </DialogHeader>
 
           {historyLoading ? (
-            <div className="text-center py-8 text-slate-400">Loading history...</div>
+            <div className="text-center py-8 text-slate-400">
+              Loading history...
+            </div>
           ) : history ? (
-            <div className="space-y-5 pt-2">
-
+            <div className="space-y-5 pt-2 no-scrollbar max-h-[60vh] overflow-y-auto">
               {/* Patient details */}
               <div className="grid grid-cols-2 gap-3 bg-slate-50 rounded-xl p-4">
                 <div>
                   <p className="text-xs text-slate-400">Phone</p>
-                  <p className="text-sm font-medium text-slate-700">{history.phone}</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {history.phone}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400">Email</p>
-                  <p className="text-sm font-medium text-slate-700 truncate">{history.email}</p>
+                  <p className="text-sm font-medium text-slate-700 truncate">
+                    {history.email}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400">Age</p>
-                  <p className="text-sm font-medium text-slate-700">{history.age} years</p>
+                  <p className="text-sm font-medium text-slate-700">
+                    {history.age} years
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400">Blood Type</p>
                   <p className="text-sm font-medium text-slate-700">
-                    {history.blood_type ?? '—'}
+                    {history.blood_type ?? "—"}
                   </p>
                 </div>
                 {history.allergies && (
                   <div className="col-span-2">
                     <p className="text-xs text-slate-400">Allergies</p>
-                    <p className="text-sm font-medium text-red-600">{history.allergies}</p>
+                    <p className="text-sm font-medium text-red-600">
+                      {history.allergies}
+                    </p>
                   </div>
                 )}
               </div>
@@ -207,7 +235,9 @@ export default function DoctorPatientHistory() {
                           <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded ml-auto">
                             {apt.token_number}
                           </span>
-                          <Badge className={`text-xs ${getStatusColor(apt.status)}`}>
+                          <Badge
+                            className={`text-xs ${getStatusColor(apt.status)}`}
+                          >
                             {getStatusLabel(apt.status)}
                           </Badge>
                         </div>
@@ -223,42 +253,60 @@ export default function DoctorPatientHistory() {
                             </div>
                             {apt.consultation.symptoms && (
                               <div>
-                                <p className="text-xs text-slate-400">Symptoms</p>
-                                <p className="text-sm text-slate-700">{apt.consultation.symptoms}</p>
+                                <p className="text-xs text-slate-400">
+                                  Symptoms
+                                </p>
+                                <p className="text-sm text-slate-700">
+                                  {apt.consultation.symptoms}
+                                </p>
                               </div>
                             )}
                             {apt.consultation.diagnosis && (
                               <div>
-                                <p className="text-xs text-slate-400">Diagnosis</p>
-                                <p className="text-sm text-slate-700">{apt.consultation.diagnosis}</p>
+                                <p className="text-xs text-slate-400">
+                                  Diagnosis
+                                </p>
+                                <p className="text-sm text-slate-700">
+                                  {apt.consultation.diagnosis}
+                                </p>
                               </div>
                             )}
                             {apt.consultation.prescription && (
                               <div>
-                                <p className="text-xs text-slate-400">Prescription</p>
-                                <p className="text-sm text-slate-700">{apt.consultation.prescription}</p>
+                                <p className="text-xs text-slate-400">
+                                  Prescription
+                                </p>
+                                <p className="text-sm text-slate-700">
+                                  {apt.consultation.prescription}
+                                </p>
                               </div>
                             )}
                             {apt.consultation.investigations &&
                               apt.consultation.investigations.length > 0 && (
                                 <div>
-                                  <p className="text-xs text-slate-400">Investigations</p>
+                                  <p className="text-xs text-slate-400">
+                                    Investigations
+                                  </p>
                                   <div className="flex flex-wrap gap-1.5 mt-1">
-                                    {apt.consultation.investigations.map((inv: Investigation, i: number) => (
-                                      <span
-                                        key={i}
-                                        className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-md"
-                                      >
-                                        {inv.name}
-                                        {inv.notes && ` — ${inv.notes}`}
-                                      </span>
-                                    ))}
+                                    {apt.consultation.investigations.map(
+                                      (inv: Investigation, i: number) => (
+                                        <span
+                                          key={i}
+                                          className="text-xs bg-yellow-50 text-yellow-700 border border-yellow-200 px-2 py-0.5 rounded-md"
+                                        >
+                                          {inv.name}
+                                          {inv.notes && ` — ${inv.notes}`}
+                                        </span>
+                                      ),
+                                    )}
                                   </div>
                                 </div>
                               )}
                             {apt.consultation.follow_up_date && (
                               <div>
-                                <p className="text-xs text-slate-400">Follow Up</p>
+                                <p className="text-xs text-slate-400">
+                                  Follow Up
+                                </p>
                                 <p className="text-sm font-medium text-teal-600">
                                   {formatDate(apt.consultation.follow_up_date)}
                                 </p>
@@ -269,7 +317,7 @@ export default function DoctorPatientHistory() {
                                 onClick={() =>
                                   window.open(
                                     `/print/consultation/${apt.consultation!.id}`,
-                                    '_blank'
+                                    "_blank",
                                   )
                                 }
                                 className="flex items-center gap-1.5 text-xs text-teal-600 hover:underline"
@@ -279,7 +327,6 @@ export default function DoctorPatientHistory() {
                               </button>
                             </div>
                           </div>
-                          
                         ) : (
                           <div className="px-4 py-3">
                             <p className="text-xs text-slate-400 italic">
@@ -292,12 +339,10 @@ export default function DoctorPatientHistory() {
                   </div>
                 )}
               </div>
-
             </div>
           ) : null}
         </DialogContent>
       </Dialog>
-
     </div>
-  )
+  );
 }

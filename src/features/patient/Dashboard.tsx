@@ -1,44 +1,50 @@
-import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import api from '@/lib/api'
-import { useAuthStore } from '@/app/store'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { formatTime, getStatusColor, getStatusLabel, formatDate } from '@/lib/utils'
-import type { Appointment } from '@/types'
-import { CalendarDays, Clock, PlusCircle, CheckCircle } from 'lucide-react'
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import api from "@/lib/api";
+import { useAuthStore } from "@/app/store";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatTime,
+  getStatusColor,
+  getStatusLabel,
+  formatDate,
+} from "@/lib/utils";
+import type { Appointment } from "@/types";
+import { CalendarDays, Clock, PlusCircle, CheckCircle } from "lucide-react";
 
 export default function PatientDashboard() {
-  const { patient } = useAuthStore()
+  const { patient } = useAuthStore();
 
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ['patient-appointments'],
+    queryKey: ["patient-appointments"],
     queryFn: async () => {
-      const res = await api.get('/patient/appointments')
-      return res.data as Appointment[]
+      const res = await api.get("/patient/appointments");
+      return res.data as Appointment[];
     },
-  })
+  });
 
-  const upcoming  = appointments.filter(a =>
-    ['waiting', 'pre_booked'].includes(a.status)
-  )
-  const completed = appointments.filter(a => a.status === 'completed').length
+  const upcoming = appointments.filter((a) =>
+    ["waiting", "pre_booked"].includes(a.status),
+  );
+  const completed = appointments.filter((a) => a.status === "completed").length;
 
-  const next = upcoming[0]
+  const next = upcoming[0];
 
   return (
     <div className="space-y-6">
-
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-slate-800">
-          Hello, {patient?.name?.split(' ')[0]} 👋
+          Hello, {patient?.name?.split(" ")[0]} 👋
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          {new Date().toLocaleDateString('en-US', {
-            weekday: 'long', year: 'numeric',
-            month: 'long', day: 'numeric'
+          {new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
           })}
         </p>
       </div>
@@ -50,7 +56,9 @@ export default function PatientDashboard() {
             <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center mx-auto mb-2">
               <Clock className="w-5 h-5 text-teal-600" />
             </div>
-            <p className="text-2xl font-bold text-slate-800">{upcoming.length}</p>
+            <p className="text-2xl font-bold text-slate-800">
+              {upcoming.length}
+            </p>
             <p className="text-xs text-slate-500 mt-1">Upcoming</p>
           </CardContent>
         </Card>
@@ -89,7 +97,8 @@ export default function PatientDashboard() {
                   {next.token_number}
                 </p>
                 <p className="text-sm text-slate-500 mt-1">
-                  {formatDate(next.appointment_date)} at {formatTime(next.slot_start)}
+                  {formatDate(next.appointment_date)} at{" "}
+                  {formatTime(next.slot_start)}
                 </p>
               </div>
               <Badge className={getStatusColor(next.status)}>
@@ -109,7 +118,9 @@ export default function PatientDashboard() {
                 <PlusCircle className="w-5 h-5 text-teal-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">Book Appointment</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  Book Appointment
+                </p>
                 <p className="text-xs text-slate-400">Schedule a visit</p>
               </div>
             </CardContent>
@@ -122,7 +133,9 @@ export default function PatientDashboard() {
                 <CalendarDays className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">My Appointments</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  My Appointments
+                </p>
                 <p className="text-xs text-slate-400">View history</p>
               </div>
             </CardContent>
@@ -134,7 +147,9 @@ export default function PatientDashboard() {
       <Card className="border-0 shadow-sm">
         <CardContent className="p-0">
           <div className="px-5 py-4 border-b border-slate-100">
-            <p className="text-sm font-semibold text-slate-800">Recent Appointments</p>
+            <p className="text-sm font-semibold text-slate-800">
+              Recent Appointments
+            </p>
           </div>
           {isLoading ? (
             <div className="text-center py-8 text-slate-400">Loading...</div>
@@ -172,7 +187,6 @@ export default function PatientDashboard() {
           )}
         </CardContent>
       </Card>
-
     </div>
-  )
+  );
 }

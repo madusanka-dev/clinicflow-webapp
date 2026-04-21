@@ -83,7 +83,7 @@ export default function StaffLayout() {
           {role === 'receptionist' && (
             <div className="px-2 pb-2">
               
-                <a href="http://127.0.0.1:8000/queue"
+                <a href="https://admin.clinicflow.lk/queue"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(

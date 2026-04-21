@@ -1,43 +1,47 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import api from '@/lib/api'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { formatDate, formatTime, getStatusColor, getStatusLabel } from '@/lib/utils'
-import type { Appointment } from '@/types'
-import { Link } from 'react-router-dom'
-import { PlusCircle } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from "@/lib/api";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  formatDate,
+  formatTime,
+  getStatusColor,
+  getStatusLabel,
+} from "@/lib/utils";
+import type { Appointment } from "@/types";
+import { Link } from "react-router-dom";
+import { PlusCircle } from "lucide-react";
 
 export default function PatientAppointments() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: ['patient-appointments'],
+    queryKey: ["patient-appointments"],
     queryFn: async () => {
-      const res = await api.get('/patient/appointments')
-      return res.data as Appointment[]
+      const res = await api.get("/patient/appointments");
+      return res.data as Appointment[];
     },
-  })
+  });
 
   const cancel = useMutation({
     mutationFn: async (id: number) => {
-      await api.put(`/patient/appointments/${id}/cancel`)
+      await api.put(`/patient/appointments/${id}/cancel`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patient-appointments'] })
+      queryClient.invalidateQueries({ queryKey: ["patient-appointments"] });
     },
-  })
+  });
 
-  const upcoming = appointments.filter(a =>
-    ['waiting', 'pre_booked'].includes(a.status)
-  )
-  const past = appointments.filter(a =>
-    !['waiting', 'pre_booked'].includes(a.status)
-  )
+  const upcoming = appointments.filter((a) =>
+    ["waiting", "pre_booked"].includes(a.status),
+  );
+  const past = appointments.filter(
+    (a) => !["waiting", "pre_booked"].includes(a.status),
+  );
 
   return (
     <div className="space-y-6">
-
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">My Appointments</h1>
@@ -78,7 +82,10 @@ export default function PatientAppointments() {
                 <CardContent className="p-0">
                   <div className="divide-y divide-slate-100">
                     {upcoming.map((apt) => (
-                      <div key={apt.id} className="flex items-center gap-4 px-5 py-4">
+                      <div
+                        key={apt.id}
+                        className="flex items-center gap-4 px-5 py-4"
+                      >
                         <span className="text-sm font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-md w-16 text-center shrink-0">
                           {apt.token_number}
                         </span>
@@ -87,10 +94,13 @@ export default function PatientAppointments() {
                             {formatDate(apt.appointment_date)}
                           </p>
                           <p className="text-xs text-slate-400">
-                            {formatTime(apt.slot_start)} — {formatTime(apt.slot_end)}
+                            {formatTime(apt.slot_start)} —{" "}
+                            {formatTime(apt.slot_end)}
                           </p>
                         </div>
-                        <Badge className={`text-xs ${getStatusColor(apt.status)}`}>
+                        <Badge
+                          className={`text-xs ${getStatusColor(apt.status)}`}
+                        >
                           {getStatusLabel(apt.status)}
                         </Badge>
                         <Button
@@ -120,7 +130,10 @@ export default function PatientAppointments() {
                 <CardContent className="p-0">
                   <div className="divide-y divide-slate-100">
                     {past.map((apt) => (
-                      <div key={apt.id} className="flex items-center gap-4 px-5 py-4">
+                      <div
+                        key={apt.id}
+                        className="flex items-center gap-4 px-5 py-4"
+                      >
                         <span className="text-sm font-bold text-slate-400 bg-slate-50 px-2 py-1 rounded-md w-16 text-center shrink-0">
                           {apt.token_number}
                         </span>
@@ -129,10 +142,13 @@ export default function PatientAppointments() {
                             {formatDate(apt.appointment_date)}
                           </p>
                           <p className="text-xs text-slate-400">
-                            {formatTime(apt.slot_start)} — {formatTime(apt.slot_end)}
+                            {formatTime(apt.slot_start)} —{" "}
+                            {formatTime(apt.slot_end)}
                           </p>
                         </div>
-                        <Badge className={`text-xs ${getStatusColor(apt.status)}`}>
+                        <Badge
+                          className={`text-xs ${getStatusColor(apt.status)}`}
+                        >
                           {getStatusLabel(apt.status)}
                         </Badge>
                       </div>
@@ -145,5 +161,5 @@ export default function PatientAppointments() {
         </>
       )}
     </div>
-  )
+  );
 }
